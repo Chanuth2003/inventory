@@ -1,0 +1,277 @@
+/* Sales Summary Container */
+.sales-summary-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+/* Heading */
+.sales-summary-container h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1a202c;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+}
+
+.summary-card h3 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.summary-card p {
+  font-size: 1rem;
+  color: #4a5568;
+  margin: 0.2rem 0;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.search-bar, .date-picker {
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-bar input, .date-picker input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.search-bar input:focus, .date-picker input:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.date-picker {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.clear-date-button {
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #e53e3e;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.clear-date-button:hover {
+  background: #c53030;
+}
+
+.sort-filter {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.sort-filter select,
+.sort-button {
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sort-filter select:focus,
+.sort-button:hover {
+  border-color: #3182ce;
+  outline: none;
+}
+
+.sort-filter select:disabled {
+  background: #f7fafc;
+  cursor: not-allowed;
+}
+
+.sort-button {
+  background: #3182ce;
+  color: white;
+  border: none;
+}
+
+/* Table Card */
+.table-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sales-table th,
+.sales-table td {
+  padding: 0.75rem;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.sales-table th {
+  background: #f7fafc;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.sales-table td {
+  border-top: 1px solid #e2e8f0;
+  color: #4a5568;
+}
+
+.table-row:hover {
+  background: #f7fafc;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-complete {
+  background: #48bb78;
+  color: white;
+}
+
+.status-pending {
+  background: #ed8936;
+  color: white;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.btn-details {
+  background: #3182ce;
+  color: white;
+}
+
+.btn-details:hover {
+  background: #2b6cb0;
+}
+
+.btn-invoice {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-invoice:hover {
+  background: #4b5563;
+}
+
+.btn-processed {
+  background: #48bb78;
+  color: white;
+}
+
+.btn-processed:hover {
+  background: #38a169;
+}
+
+.btn-returned {
+  background: #e53e3e;
+  color: white;
+}
+
+.btn-returned:hover {
+  background: #c53030;
+}
+
+.cheque-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Error Message */
+.error-message {
+  color: #e53e3e;
+  text-align: center;
+  margin: 2rem 0;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sort-filter {
+    justify-content: space-between;
+  }
+
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+}

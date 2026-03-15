@@ -1,0 +1,57 @@
+.production-out {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.production-out h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.production-out-form .form-group {
+  margin-bottom: 15px;
+}
+
+.production-out-form label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.production-out-form input,
+.production-out-form select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.submit-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.submit-button:hover {
+  background-color: #45a049;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.success-message {
+  color: green;
+  text-align: center;
+  margin-bottom: 10px;
+}

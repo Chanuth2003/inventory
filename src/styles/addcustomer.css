@@ -1,0 +1,218 @@
+/* Add Customer Wrapper (to isolate from app.css) */
+.add-customer-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  overflow: auto;
+  background: linear-gradient(135deg, #f4f6f9 0%, #e9ecef 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Add Customer Container */
+.add-customer-container {
+  width: 100%;
+  max-width: 600px; /* Slightly wider for better form layout */
+  overflow-y: auto;
+}
+
+/* Add Customer Card */
+.add-customer-card {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Animation for card entrance */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Notification */
+.notification {
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification.success {
+  background: #e8f5e9;
+  color: #2ecc71;
+  border: 1px solid #2ecc71;
+}
+
+.notification.error {
+  background: #fce4e4;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+}
+
+/* Animation for notification */
+@keyframes slideIn {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Form */
+.add-customer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.add-customer-title {
+  font-size: 24px; /* Adjusted for better prominence */
+  color: #34495e;
+  text-align: center;
+  margin-bottom: 30px; /* Increased vertical distance between title and form */
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 15px;
+  color: #34495e;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 12px;
+  border: 2px solid #ecf0f1;
+  border-radius: 8px;
+  font-size: 15px;
+  background: #fafafa;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Submit Button */
+.submit-btn {
+  padding: 14px;
+  background: linear-gradient(90deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.3s ease, background 0.3s ease;
+  text-transform: uppercase;
+}
+
+.submit-btn:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(90deg, #2980b9, #3498db);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .add-customer-container {
+    padding: 10px;
+  }
+
+  .add-customer-card {
+    padding: 25px;
+  }
+
+  .add-customer-title {
+    font-size: 22px;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .submit-btn {
+    font-size: 15px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .add-customer-card {
+    padding: 20px;
+  }
+
+  .add-customer-title {
+    font-size: 20px;
+  }
+
+  .form-group label {
+    font-size: 14px;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .submit-btn {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .notification {
+    font-size: 14px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 320px) {
+  .add-customer-card {
+    padding: 15px;
+  }
+
+  .add-customer-title {
+    font-size: 18px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    font-size: 12px;
+    padding: 6px;
+  }
+
+  .submit-btn {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .notification {
+    font-size: 12px;
+    padding: 8px;
+  }
+}

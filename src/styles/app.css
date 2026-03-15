@@ -1,0 +1,316 @@
+/* Global Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+/* Custom Font Definition */
+@font-face {
+  font-family: 'BebasNeue';
+  src: url('./src/assets/fonts/BebasNeue-Regular.woff2') format('woff2'),
+       url('./src/assets/fonts/BebasNeue-Regular.woff') format('woff'),
+       url('./src/assets/fonts/BebasNeue-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body,
+html {
+  height: 100%;
+  background: #F3F4F6; /* Off-White background */
+  color: #111827; /* Gray-900 text */
+  overflow-x: hidden; /* Prevent horizontal overflow */
+  overflow-y: auto; /* Allow vertical scrolling */
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Toggle Button (always visible) */
+.sidebar-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: #14B8A6; /* Teal accent */
+  border: none;
+  width: 30px;
+  height: 20px;
+  cursor: pointer;
+  z-index: 300;
+  padding: 0;
+  border-radius: 3px;
+  transition: left 0.3s ease; /* Smooth transition for repositioning */
+}
+
+.app-container.sidebar-open .sidebar-toggle {
+  left: 270px; /* Move toggle button to the right when sidebar is open */
+}
+
+.sidebar-toggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: white;
+  position: absolute;
+  left: 5px;
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle span:nth-child(1) { top: 4px; }
+.sidebar-toggle span:nth-child(2) { top: 9px; }
+.sidebar-toggle span:nth-child(3) { top: 14px; }
+
+.app-container.sidebar-open .sidebar-toggle span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+.app-container.sidebar-open .sidebar-toggle span:nth-child(2) {
+  opacity: 0;
+}
+.app-container.sidebar-open .sidebar-toggle span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background: #1F2937; /* Charcoal Slate primary */
+  color: #F3F4F6; /* Off-White text for contrast */
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translateX(-100%); /* Hidden by default */
+  transition: transform 0.3s ease;
+  z-index: 200;
+  max-height: 100vh; /* Ensure it doesn't exceed viewport height */
+  overflow-y: auto; /* Make sidebar scrollable */
+}
+
+.app-container.sidebar-open .sidebar {
+  transform: translateX(0); /* Show sidebar when open */
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  text-align: center;
+  margin-bottom: 25px;
+  padding: 10px 0; /* Added padding for better spacing */
+}
+
+/* Enlarged App Title */
+.app-title {
+  font-size: 38px !important; /* Increased size */
+  font-weight: 700 !important; /* Stronger boldness */
+  color: #14B8A6; /* Teal accent */
+  font-family: 'BebasNeue', 'Inter', sans-serif; /* Custom font with fallback */
+  line-height: 1.2; /* Better readability */
+  letter-spacing: 1px; /* Wider spacing */
+  text-transform: uppercase; /* All caps for emphasis */
+}
+
+/* Sidebar Menu */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  flex: 1;
+}
+
+.menu-item {
+  margin: 4px 0;
+}
+
+.menu-link,
+.submenu-link {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between icon and text */
+  padding: 12px 18px;
+  text-decoration: none;
+  color: #F3F4F6; /* Off-White text */
+  border-radius: 6px;
+  font-size: 15px;
+  transition: all 0.25s ease;
+  cursor: pointer; /* Ensure clickable appearance for menu-link */
+}
+
+.menu-link:hover,
+.submenu-link:hover,
+.menu-link.active,
+.submenu-link.active {
+  background: #14B8A6; /* Teal accent for hover/active */
+  color: #111827; /* Gray-900 text for contrast on active/hover */
+  transform: translateX(3px);
+}
+
+/* Submenu */
+.has-submenu .submenu {
+  margin-left: 12px;
+  margin-top: 4px;
+  border-left: 2px solid rgba(243, 244, 246, 0.2); /* Off-White with transparency */
+  display: none; /* Hidden by default */
+}
+
+.has-submenu .submenu.open {
+  display: block; /* Show when open class is applied */
+}
+
+/* Logout Button */
+.logout-btn {
+  width: 90%;
+  background: #DC2626; /* Crimson danger */
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 20px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px; /* Space between icon and text */
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: #B91C1C; /* Darker crimson for hover */
+  transform: scale(1.05);
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: 0; /* No default margin, handled by sidebar state */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-y: auto;
+  background: #F3F4F6; /* Off-White background */
+  transition: margin-left 0.3s ease;
+}
+
+.app-container.sidebar-open .main-content {
+  margin-left: 250px; /* Shift content when sidebar is open */
+}
+
+.header {
+  background: #1F2937; /* Charcoal Slate primary */
+  padding: 18px 25px;
+  border-bottom: 1px solid rgba(243, 244, 246, 0.2); /* Off-White with transparency */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-title {
+  font-size: 40px;
+  color: #F3F4F6; /* Off-White text */
+  font-weight: 700; /* Match app-title weight */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.content-wrapper {
+  padding: 25px;
+  width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-container.sidebar-open {
+    overflow: hidden; /* Prevent background scroll when sidebar is open on small screens */
+  }
+
+  .sidebar-toggle {
+    top: 15px;
+    left: 15px;
+    background: #14B8A6; /* Teal accent */ 
+  }
+
+  .app-container.sidebar-open .sidebar-toggle {
+    left: 265px; /* Adjusted for smaller screens */
+  }
+
+  .header {
+    padding: 15px 20px;
+  }
+
+  .header-title {
+    font-size: 18px;
+  }
+
+  .content-wrapper {
+    padding: 15px;
+  }
+
+  .app-title {
+    font-size: 32px; /* Scales down on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-toggle {
+    top: 10px;
+    left: 10px;
+  }
+
+  .app-container.sidebar-open .sidebar-toggle {
+    left: 260px; /* Adjusted for very small screens */
+  }
+
+  .header-title {
+    font-size: 16px;
+  }
+
+  .content-wrapper {
+    padding: 10px;
+  }
+
+  .app-title {
+    font-size: 28px; /* Scales further down */
+  }
+}
+
+@media (max-width: 320px) {
+  .sidebar-toggle {
+    top: 8px;
+    left: 8px;
+  }
+
+  .app-container.sidebar-open .sidebar-toggle {
+    left: 258px; /* Adjusted for tiny screens */
+  }
+
+  .header-title {
+    font-size: 14px;
+  }
+
+  .content-wrapper {
+    padding: 8px;
+  }
+
+  .app-title {
+    font-size: 24px; /* Smallest for tiny screens */
+  }
+}
+
+/* Scrollbar Styling */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(243, 244, 246, 0.5); /* Off-White with transparency */
+  border-radius: 10px;
+}
+

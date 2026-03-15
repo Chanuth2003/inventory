@@ -1,0 +1,1 @@
+export const ADMIN_PASSWORD_HASH = "$2b$10$QpnEcQUqyraZwjkQSnV.2OQzV9aMmDn3bSOPp9.zLFdUwo54.QI4y";

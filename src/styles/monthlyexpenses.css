@@ -1,0 +1,216 @@
+/* Wrapper */
+.monthly-expenses-wrapper {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+/* Container */
+.monthly-expenses-container {
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Card */
+.monthly-expenses-card {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Title */
+.monthly-expenses-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+/* Error and Success Messages */
+.error-message {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 10px;
+  background-color: #ffebee;
+  border-radius: 6px;
+}
+
+.success-message {
+  color: #10b981;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 10px;
+  background-color: #e8f5e9;
+  border-radius: 6px;
+}
+
+/* Form */
+.monthly-expenses-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group input {
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #f9fafb;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Remove scroll effect and spinners for number inputs */
+.form-group input[type="number"] {
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.form-group input[type="number"]::-webkit-inner-spin-button,
+.form-group input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Submit Button */
+.monthly-expenses-submit-btn {
+  padding: 12px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.monthly-expenses-submit-btn:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.monthly-expenses-submit-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* No Data Section */
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #4b5563;
+}
+
+.no-data p {
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+}
+
+.expenses-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.expenses-table thead tr {
+  background-color: #e5e7eb;
+}
+
+.expenses-table th {
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  text-align: left;
+}
+
+.expenses-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.expenses-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.expenses-table td {
+  padding: 12px;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .monthly-expenses-container {
+    padding: 12px;
+  }
+
+  .monthly-expenses-title {
+    font-size: 20px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+
+  .form-group input {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .monthly-expenses-submit-btn {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .error-message,
+  .success-message {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .expenses-table th,
+  .expenses-table td {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .no-data p {
+    font-size: 13px;
+  }
+}

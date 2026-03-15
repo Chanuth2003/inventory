@@ -1,0 +1,82 @@
+.production-inventory {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.production-inventory h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.production-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.production-table th, .production-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.production-table th {
+  background-color: #f2f2f2;
+}
+
+.production-table input {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.production-table button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.production-table button:hover {
+  background-color: #45a049;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.success-message {
+  color: green;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.production-table button {
+  background-color: #14B8A6;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 5px; /* Space between buttons */
+}
+
+.production-table button:last-child {
+  background-color: #f44336; /* Red for Delete button */
+}
+
+.production-table button:hover {
+  background-color: #14B8A6d4; /* Green hover for Edit/Save */
+}
+
+.production-table button:last-child:hover {
+  background-color: #14B8A6d4; /* Darker red hover for Delete */
+}
