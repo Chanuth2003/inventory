@@ -1,5 +1,18 @@
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 // import Chart from 'chart.js/auto';
 // import ChartDataLabels from 'chartjs-plugin-datalabels'; 
@@ -56,6 +69,12 @@
 //   const paymentChartInstanceRef = useRef(null);
 //   const customersChartInstanceRef = useRef(null);
 //   const inventoryChartInstanceRef = useRef(null);
+
+//   // Prevent scroll wheel from changing number input values
+//   const handleWheel = (e) => {
+//     e.preventDefault();
+//     e.target.blur(); // Optional: blur to prevent further scroll interaction
+//   };
 
 //   // Default date: past 30 days
 //   useEffect(() => {
@@ -153,8 +172,8 @@
 //           datasets: [{
 //             label: 'Daily Sales',
 //             data: analyticsData.salesByDate.map(d => d.dailyTotal || 0),
-//             borderColor: 'rgba(75, 192, 192, 1)',
-//             backgroundColor: 'rgba(75, 192, 192, 0.2)',
+//             borderColor: '#3b82f6',
+//             backgroundColor: 'rgba(59, 130, 246, 0.2)',
 //             fill: true,
 //             tension: 0.4,
 //           }],
@@ -195,28 +214,30 @@
 //         type: 'pie',
 //         plugins: [ChartDataLabels],
 //         data: {
-//           labels: analyticsData.paymentBreakdown.map(p => p.payment_method || ''),
+//           labels: analyticsData.paymentBreakdown.map(p => p.payment_method || 'Unknown'),
 //           datasets: [{
 //             label: 'Payment Amount',
 //             data: analyticsData.paymentBreakdown.map(item => item.total || 0),
 //             backgroundColor: [
-//               'rgba(75, 192, 192, 0.5)',
+//               'rgba(59, 130, 246, 0.5)',
 //               'rgba(255, 99, 132, 0.5)',
-//               'rgba(54, 162, 235, 0.5)',
+//               'rgba(16, 185, 129, 0.5)',
 //               'rgba(255, 206, 86, 0.5)',
 //               'rgba(153, 102, 255, 0.5)',
 //             ],
 //           }],
 //         },
 //         options: {
+//           responsive: true,
 //           plugins: {
+//             title: { display: true, text: 'Payment Breakdown' },
 //             datalabels: {
 //               color: '#fff',
 //               font: { weight: 'bold', size: 14 },
 //               formatter: (value, ctx) => {
-//                 const dataset = ctx.chart.data.datasets[0];
-//                 const total = dataset.data.reduce((acc, val) => acc + val, 0);
-//                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+//                 const dataset = ctx.dataset;
+//                 const total = dataset.data.reduce((acc, val) => acc + (Number(val) || 0), 0);
+//                 const percentage = total > 0 ? ((Number(value) / total) * 100).toFixed(1) : 0;
 //                 return `${percentage}%`;
 //               },
 //             },
@@ -234,8 +255,8 @@
 //           datasets: [{
 //             label: 'Total Spent (LKR)',
 //             data: filteredCustomers.map(c => c.total_spent || 0),
-//             backgroundColor: 'rgba(54, 162, 235, 0.5)',
-//             borderColor: 'rgba(54, 162, 235, 1)',
+//             backgroundColor: 'rgba(16, 185, 129, 0.5)',
+//             borderColor: 'rgba(16, 185, 129, 1)',
 //             borderWidth: 1,
 //           }],
 //         },
@@ -269,6 +290,15 @@
 //         },
 //       });
 //     }
+
+//     // Cleanup on unmount
+//     return () => {
+//       if (salesChartInstanceRef.current) salesChartInstanceRef.current.destroy();
+//       if (productsChartInstanceRef.current) productsChartInstanceRef.current.destroy();
+//       if (paymentChartInstanceRef.current) paymentChartInstanceRef.current.destroy();
+//       if (customersChartInstanceRef.current) customersChartInstanceRef.current.destroy();
+//       if (inventoryChartInstanceRef.current) inventoryChartInstanceRef.current.destroy();
+//     };
 //   }, [analyticsData, filteredProducts, filteredCustomers]);
 
 //   return (
@@ -372,8 +402,10 @@
 //               type="number"
 //               value={threshold}
 //               onChange={e => setThreshold(Math.max(0, parseInt(e.target.value, 10) || 0))}
+//               onWheel={handleWheel}
 //               min="0"
 //               step="1"
+//               placeholder="Enter threshold"
 //             />
 //           </div>
 //           {analyticsData.lowStockItems.length > 0 ? (
@@ -437,9 +469,30 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels'; 
+import api from '../utils/api';
 import '../styles/analyticaldashboard.css';
 
 // Error Boundary Component
@@ -454,8 +507,8 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="error-message">
-          <h2>Error: Something went wrong</h2>
-          <p>{this.state.error?.message || 'Unknown error'}</p>
+          <h2>Something went wrong</h2>
+          <p>{this.state.error?.message || 'Unknown error occurred'}</p>
         </div>
       );
     }
@@ -494,22 +547,17 @@ const AnalyticalManagement = () => {
   const customersChartInstanceRef = useRef(null);
   const inventoryChartInstanceRef = useRef(null);
 
-  // Prevent scroll wheel from changing number input values
-  const handleWheel = (e) => {
-    e.preventDefault();
-    e.target.blur(); // Optional: blur to prevent further scroll interaction
-  };
-
-  // Default date: past 30 days
+  // Default date range: past 30 days
   useEffect(() => {
     const today = new Date();
     const pastMonth = new Date(today);
     pastMonth.setDate(today.getDate() - 30);
+    
     setStartDate(pastMonth.toISOString().split('T')[0]);
     setEndDate(today.toISOString().split('T')[0]);
   }, []);
 
-  // Fetch analytics
+  // Fetch Analytics Data
   const fetchAnalytics = useCallback(async () => {
     if (!startDate || !endDate) {
       setError('Please select both start and end dates');
@@ -521,25 +569,26 @@ const AnalyticalManagement = () => {
     }
 
     try {
-      const res = await fetch(
-        `http://localhost:5000/analytics?startDate=${startDate}&endDate=${endDate}&threshold=${threshold}`
-      );
-      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-      const data = await res.json();
-      setAnalyticsData({
-        totalSales: data.totalSales || 0,
-        totalOrders: data.totalOrders || 0,
-        topProducts: Array.isArray(data.topProducts) ? data.topProducts : [],
-        salesByDate: Array.isArray(data.salesByDate) ? data.salesByDate : [],
-        paymentBreakdown: Array.isArray(data.paymentBreakdown) ? data.paymentBreakdown : [],
-        customerGrowth: data.customerGrowth || 0,
-        topCustomers: Array.isArray(data.topCustomers) ? data.topCustomers : [],
-        inventorySummary: Array.isArray(data.inventorySummary) ? data.inventorySummary : [],
-        lowStockItems: Array.isArray(data.lowStockItems) ? data.lowStockItems : [],
-      });
       setError('');
+      const res = await api.get(`/analytics?startDate=${startDate}&endDate=${endDate}&threshold=${threshold}`);
+      
+      setAnalyticsData({
+        totalSales: res.data.totalSales || 0,
+        totalOrders: res.data.totalOrders || 0,
+        topProducts: Array.isArray(res.data.topProducts) ? res.data.topProducts : [],
+        salesByDate: Array.isArray(res.data.salesByDate) ? res.data.salesByDate : [],
+        paymentBreakdown: Array.isArray(res.data.paymentBreakdown) ? res.data.paymentBreakdown : [],
+        customerGrowth: res.data.customerGrowth || 0,
+        topCustomers: Array.isArray(res.data.topCustomers) ? res.data.topCustomers : [],
+        inventorySummary: Array.isArray(res.data.inventorySummary) ? res.data.inventorySummary : [],
+        lowStockItems: Array.isArray(res.data.lowStockItems) ? res.data.lowStockItems : [],
+      });
     } catch (err) {
-      setError(`Failed to fetch analytics: ${err.message}`);
+      console.error('Analytics fetch error:', err);
+      setError('Failed to fetch analytics data. Please login again.');
+      if (err.response?.status === 401) {
+        window.location.href = '/login';
+      }
     }
   }, [startDate, endDate, threshold]);
 
@@ -547,14 +596,16 @@ const AnalyticalManagement = () => {
     if (startDate && endDate) fetchAnalytics();
   }, [startDate, endDate, threshold, fetchAnalytics]);
 
-  // Filter logic for products & customers
+  // Prevent scroll wheel on number inputs
+  const handleWheel = (e) => {
+    e.preventDefault();
+    e.target.blur();
+  };
+
+  // Filter logic
   const filteredProducts = useMemo(() => {
     if (!productSearch.trim()) return analyticsData.topProducts;
-    const searchList = productSearch
-      .split(',')
-      .map(p => p.trim().toLowerCase())
-      .filter(Boolean);
-
+    const searchList = productSearch.split(',').map(p => p.trim().toLowerCase()).filter(Boolean);
     return analyticsData.topProducts.filter(p =>
       searchList.includes((p.product || '').toLowerCase())
     );
@@ -562,32 +613,28 @@ const AnalyticalManagement = () => {
 
   const filteredCustomers = useMemo(() => {
     if (!customerSearch.trim()) return analyticsData.topCustomers;
-    const searchList = customerSearch
-      .split(',')
-      .map(c => c.trim().toLowerCase())
-      .filter(Boolean);
-
+    const searchList = customerSearch.split(',').map(c => c.trim().toLowerCase()).filter(Boolean);
     return analyticsData.topCustomers.filter(c =>
       searchList.includes((c.customer || '').toLowerCase())
     );
   }, [analyticsData.topCustomers, customerSearch]);
 
-  // Calculate extra metric
-  const averageOrderValue =
-    analyticsData.totalOrders > 0
-      ? (analyticsData.totalSales / analyticsData.totalOrders).toFixed(2)
-      : 0;
+  const averageOrderValue = analyticsData.totalOrders > 0 
+    ? (analyticsData.totalSales / analyticsData.totalOrders).toFixed(2) 
+    : 0;
 
-  // Render charts
+  // Render Charts
   useEffect(() => {
-    // Destroy existing charts before re-render
-    if (salesChartInstanceRef.current) salesChartInstanceRef.current.destroy();
-    if (productsChartInstanceRef.current) productsChartInstanceRef.current.destroy();
-    if (paymentChartInstanceRef.current) paymentChartInstanceRef.current.destroy();
-    if (customersChartInstanceRef.current) customersChartInstanceRef.current.destroy();
-    if (inventoryChartInstanceRef.current) inventoryChartInstanceRef.current.destroy();
+    // Destroy old charts
+    [salesChartInstanceRef, productsChartInstanceRef, paymentChartInstanceRef, 
+     customersChartInstanceRef, inventoryChartInstanceRef].forEach(ref => {
+      if (ref.current) {
+        ref.current.destroy();
+        ref.current = null;
+      }
+    });
 
-    // Sales Trend
+    // Sales Trend Chart
     if (salesChartRef.current && analyticsData.salesByDate.length > 0) {
       salesChartInstanceRef.current = new Chart(salesChartRef.current, {
         type: 'line',
@@ -602,10 +649,7 @@ const AnalyticalManagement = () => {
             tension: 0.4,
           }],
         },
-        options: {
-          responsive: true,
-          plugins: { title: { display: true, text: 'Sales Trend' } },
-        },
+        options: { responsive: true, plugins: { title: { display: true, text: 'Sales Trend' } } }
       });
     }
 
@@ -619,20 +663,13 @@ const AnalyticalManagement = () => {
             label: 'Quantity Sold',
             data: filteredProducts.map(p => p.qty || 0),
             backgroundColor: 'rgba(255, 99, 132, 0.5)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1,
           }],
         },
-        options: {
-          responsive: true,
-          indexAxis: 'y',
-          maintainAspectRatio: false,
-          plugins: { title: { display: true, text: 'Products Comparison' } },
-        },
+        options: { responsive: true, indexAxis: 'y', plugins: { title: { display: true, text: 'Top Products' } } }
       });
     }
 
-    // Payment Breakdown
+    // Payment Breakdown (Pie)
     if (paymentChartRef.current && analyticsData.paymentBreakdown.length > 0) {
       paymentChartInstanceRef.current = new Chart(paymentChartRef.current, {
         type: 'pie',
@@ -640,33 +677,17 @@ const AnalyticalManagement = () => {
         data: {
           labels: analyticsData.paymentBreakdown.map(p => p.payment_method || 'Unknown'),
           datasets: [{
-            label: 'Payment Amount',
             data: analyticsData.paymentBreakdown.map(item => item.total || 0),
-            backgroundColor: [
-              'rgba(59, 130, 246, 0.5)',
-              'rgba(255, 99, 132, 0.5)',
-              'rgba(16, 185, 129, 0.5)',
-              'rgba(255, 206, 86, 0.5)',
-              'rgba(153, 102, 255, 0.5)',
-            ],
+            backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'],
           }],
         },
         options: {
           responsive: true,
           plugins: {
             title: { display: true, text: 'Payment Breakdown' },
-            datalabels: {
-              color: '#fff',
-              font: { weight: 'bold', size: 14 },
-              formatter: (value, ctx) => {
-                const dataset = ctx.dataset;
-                const total = dataset.data.reduce((acc, val) => acc + (Number(val) || 0), 0);
-                const percentage = total > 0 ? ((Number(value) / total) * 100).toFixed(1) : 0;
-                return `${percentage}%`;
-              },
-            },
-          },
-        },
+            datalabels: { color: '#fff', font: { weight: 'bold' } }
+          }
+        }
       });
     }
 
@@ -680,16 +701,9 @@ const AnalyticalManagement = () => {
             label: 'Total Spent (LKR)',
             data: filteredCustomers.map(c => c.total_spent || 0),
             backgroundColor: 'rgba(16, 185, 129, 0.5)',
-            borderColor: 'rgba(16, 185, 129, 1)',
-            borderWidth: 1,
           }],
         },
-        options: {
-          responsive: true,
-          indexAxis: 'y',
-          maintainAspectRatio: false,
-          plugins: { title: { display: true, text: 'Customers Comparison' } },
-        },
+        options: { responsive: true, indexAxis: 'y', plugins: { title: { display: true, text: 'Top Customers' } } }
       });
     }
 
@@ -703,25 +717,18 @@ const AnalyticalManagement = () => {
             label: 'Stock Quantity',
             data: analyticsData.inventorySummary.map(i => i.total_quantity || 0),
             backgroundColor: 'rgba(153, 102, 255, 0.5)',
-            borderColor: 'rgba(153, 102, 255, 1)',
-            borderWidth: 1,
           }],
         },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          plugins: { title: { display: true, text: 'Current Inventory Levels' } },
-        },
+        options: { responsive: true, indexAxis: 'y', plugins: { title: { display: true, text: 'Current Inventory' } } }
       });
     }
 
-    // Cleanup on unmount
+    // Cleanup
     return () => {
-      if (salesChartInstanceRef.current) salesChartInstanceRef.current.destroy();
-      if (productsChartInstanceRef.current) productsChartInstanceRef.current.destroy();
-      if (paymentChartInstanceRef.current) paymentChartInstanceRef.current.destroy();
-      if (customersChartInstanceRef.current) customersChartInstanceRef.current.destroy();
-      if (inventoryChartInstanceRef.current) inventoryChartInstanceRef.current.destroy();
+      [salesChartInstanceRef, productsChartInstanceRef, paymentChartInstanceRef, 
+       customersChartInstanceRef, inventoryChartInstanceRef].forEach(ref => {
+        if (ref.current) ref.current.destroy();
+      });
     };
   }, [analyticsData, filteredProducts, filteredCustomers]);
 
@@ -731,7 +738,7 @@ const AnalyticalManagement = () => {
         <h2 className="dashboard-title">Analytical Dashboard</h2>
         {error && <div className="error-message">{error}</div>}
 
-        {/* Date selector */}
+        {/* Date Range Selector */}
         <div className="date-range-selector">
           <div className="form-group">
             <label>Start Date</label>
@@ -744,21 +751,21 @@ const AnalyticalManagement = () => {
           <button onClick={fetchAnalytics} className="btn btn-fetch">Fetch Data</button>
         </div>
 
-        {/* Summary */}
+        {/* Summary Cards */}
         <div className="analytics-summary">
-          <h3>Key Metrics Summary</h3>
+          <h3>Key Metrics</h3>
           <div className="summary-cards">
             <div className="summary-card">
-              <h4>Total Sales (LKR)</h4>
-              <p>{Number(analyticsData.totalSales).toFixed(2)}</p>
+              <h4>Total Sales</h4>
+              <p>Rs. {Number(analyticsData.totalSales).toFixed(2)}</p>
             </div>
             <div className="summary-card">
               <h4>Total Orders</h4>
               <p>{analyticsData.totalOrders}</p>
             </div>
             <div className="summary-card">
-              <h4>Average Order Value (LKR)</h4>
-              <p>{averageOrderValue}</p>
+              <h4>Avg Order Value</h4>
+              <p>Rs. {averageOrderValue}</p>
             </div>
             <div className="summary-card">
               <h4>New Customers</h4>
@@ -767,7 +774,7 @@ const AnalyticalManagement = () => {
           </div>
         </div>
 
-        {/* Charts */}
+        {/* Charts Section */}
         <div className="analytics-charts">
           <div className="chart-section">
             <h3>Sales Trend</h3>
@@ -775,19 +782,16 @@ const AnalyticalManagement = () => {
           </div>
 
           <div className="chart-section">
-            <h3>Products</h3>
+            <h3>Top Products</h3>
             <div className="search-group">
-              <label>Search Products (comma-separated)</label>
               <input
                 type="text"
                 value={productSearch}
                 onChange={e => setProductSearch(e.target.value)}
-                placeholder="e.g., Product1, Product2"
+                placeholder="Search products (comma separated)"
               />
             </div>
-            <div className="scrollable-chart">
-              <canvas ref={productsChartRef}></canvas>
-            </div>
+            <canvas ref={productsChartRef}></canvas>
           </div>
 
           <div className="chart-section">
@@ -796,28 +800,25 @@ const AnalyticalManagement = () => {
           </div>
 
           <div className="chart-section">
-            <h3>Customers</h3>
+            <h3>Top Customers</h3>
             <div className="search-group">
-              <label>Search Customers (comma-separated)</label>
               <input
                 type="text"
                 value={customerSearch}
                 onChange={e => setCustomerSearch(e.target.value)}
-                placeholder="e.g., Customer1, Customer2"
+                placeholder="Search customers (comma separated)"
               />
             </div>
-            <div className="scrollable-chart">
-              <canvas ref={customersChartRef}></canvas>
-            </div>
+            <canvas ref={customersChartRef}></canvas>
           </div>
 
           <div className="chart-section">
-            <h3>Inventory Levels</h3>
+            <h3>Current Inventory</h3>
             <canvas ref={inventoryChartRef}></canvas>
           </div>
         </div>
 
-        {/* Low stock */}
+        {/* Low Stock Alert */}
         <div className="low-stock-section">
           <h3>Low Stock Alert</h3>
           <div className="threshold-selector">
@@ -825,19 +826,18 @@ const AnalyticalManagement = () => {
             <input
               type="number"
               value={threshold}
-              onChange={e => setThreshold(Math.max(0, parseInt(e.target.value, 10) || 0))}
+              onChange={e => setThreshold(Math.max(0, parseInt(e.target.value) || 0))}
               onWheel={handleWheel}
               min="0"
-              step="1"
-              placeholder="Enter threshold"
             />
           </div>
+
           {analyticsData.lowStockItems.length > 0 ? (
             <table className="low-stock-table">
               <thead>
                 <tr>
                   <th>Product</th>
-                  <th>Quantity</th>
+                  <th>Current Quantity</th>
                   <th>Threshold</th>
                 </tr>
               </thead>

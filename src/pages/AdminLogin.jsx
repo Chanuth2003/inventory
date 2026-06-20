@@ -146,6 +146,114 @@
 
 
 
+// import { useState, useContext } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { AuthContext } from "../context/AuthContext";
+
+// export default function AdminLogin() {
+//   const navigate = useNavigate();
+//   const { setIsLoggedIn } = useContext(AuthContext);
+//   const [error, setError] = useState("");
+//   const [loading, setLoading] = useState(false);
+
+//   const handleLogin = async (e) => {
+//     e.preventDefault();
+//     setError("");
+//     setLoading(true);
+
+//     const password = e.target.password.value.trim();
+
+//     try {
+//       const res = await fetch("http://localhost:5000/login", {
+//         method: "POST",
+//         credentials: "include",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ password }),
+//       });
+
+//       const data = await res.json();
+
+//       if (!res.ok || !data.success) throw new Error(data.message || "Login failed");
+
+//       setIsLoggedIn(true);
+//       navigate("/dashboard");
+//     } catch (err) {
+//       setError(err.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="container mx-auto max-w-sm mt-20 p-6 bg-white rounded-lg shadow-md">
+//       <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
+
+//       {error && (
+//         <p className="text-red-600 bg-red-50 p-3 rounded mb-4 text-center">{error}</p>
+//       )}
+
+//       <form onSubmit={handleLogin}>
+//         <div className="mb-5">
+//           <label className="block text-gray-700 mb-2 font-medium">Password</label>
+//           <input
+//             name="password"
+//             type="password"
+//             placeholder="Enter password"
+//             required
+//             autoFocus
+//             className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           />
+//         </div>
+
+//         <button
+//           type="submit"
+//           disabled={loading}
+//           className={`w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition
+//             ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
+//         >
+//           {loading ? "Checking..." : "Login"}
+//         </button>
+//       </form>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -153,6 +261,7 @@ import { AuthContext } from "../context/AuthContext";
 export default function AdminLogin() {
   const navigate = useNavigate();
   const { setIsLoggedIn } = useContext(AuthContext);
+  
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -164,7 +273,7 @@ export default function AdminLogin() {
     const password = e.target.password.value.trim();
 
     try {
-      const res = await fetch("http://localhost:5000/login", {
+      const res = await fetch("http://localhost:5000/api/login", {   // ← Changed to /api/login
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -173,12 +282,15 @@ export default function AdminLogin() {
 
       const data = await res.json();
 
-      if (!res.ok || !data.success) throw new Error(data.message || "Login failed");
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Invalid password");
+      }
 
       setIsLoggedIn(true);
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -217,10 +329,3 @@ export default function AdminLogin() {
     </div>
   );
 }
-
-
-
-
-
-
-

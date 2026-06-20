@@ -1,6 +1,5 @@
-
-
-import { useState } from 'react';
+import React, { useState } from 'react';
+import api from '../utils/api';
 import '../styles/addproduct.css';
 
 export default function AddProduct() {
@@ -10,46 +9,40 @@ export default function AddProduct() {
     unit: 'meter',
     price: ''
   });
-  const [successMessage, setSuccessMessage] = useState(''); // Added state for success message
+  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProduct(prev => ({ ...prev, [name]: value }));
   };
 
-  // Prevent scroll wheel from changing number input values
   const handleWheel = (e) => {
     e.preventDefault();
-    e.target.blur(); // Optional: blur to prevent further scroll interaction
+    e.target.blur();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccessMessage('');
 
     try {
-      const response = await fetch('http://localhost:5000/add-product', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: product.type,
-          product_id: product.id,
-          unit: product.unit,
-          price: parseFloat(product.price)
-        })
+      const response = await api.post('/add-product', {
+        type: product.type,
+        product_id: product.id,
+        unit: product.unit,
+        price: parseFloat(product.price)
       });
 
-      if (response.ok) {
-        setSuccessMessage('✅ Product successfully added to the database!'); // Updated success message
+      if (response.status === 201) {
+        setSuccessMessage('✅ Product successfully added!');
         setProduct({ type: '', id: '', unit: 'meter', price: '' });
-        // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(''), 3000);
-      } else {
-        const errorData = await response.json();
-        alert('❌ Submission failed: ' + errorData.error);
       }
     } catch (err) {
-      console.error('❌ Error submitting product:', err);
-      alert('❌ Something went wrong while submitting.');
+      console.error('Error adding product:', err);
+      setError(err.response?.data?.error || 'Failed to add product. Please try again.');
     }
   };
 
@@ -58,16 +51,19 @@ export default function AddProduct() {
       <div className="add-product-container">
         <div className="add-product-card">
           <h2 className="add-product-title">Add Product</h2>
+
           {successMessage && (
-            <div className="success-message" style={{
-              color: '#28a745',
-              textAlign: 'center',
-              marginBottom: '20px',
-              fontWeight: '600'
-            }}>
+            <div className="success-message" style={{ color: '#28a745', textAlign: 'center', marginBottom: '20px' }}>
               {successMessage}
             </div>
           )}
+
+          {error && (
+            <div className="error-message" style={{ color: 'red', textAlign: 'center', marginBottom: '20px' }}>
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="add-product-form">
             <div className="form-group">
               <label htmlFor="type">Product Type</label>
@@ -81,6 +77,7 @@ export default function AddProduct() {
                 required
               />
             </div>
+
             <div className="form-group">
               <label htmlFor="id">Product ID</label>
               <input
@@ -93,6 +90,7 @@ export default function AddProduct() {
                 required
               />
             </div>
+
             <div className="form-group">
               <label htmlFor="unit">Unit</label>
               <select
@@ -106,6 +104,7 @@ export default function AddProduct() {
                 <option value="piece">Piece</option>
               </select>
             </div>
+
             <div className="form-group">
               <label htmlFor="price">Selling Price (per unit)</label>
               <input
@@ -121,6 +120,7 @@ export default function AddProduct() {
                 step="0.01"
               />
             </div>
+
             <button type="submit" className="submit-btn">
               Add Product
             </button>

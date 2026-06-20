@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/PeriodExpensesForm.css';
 
@@ -42,7 +42,7 @@ const EditPeriodExpenses = () => {
       setLoading(true);
       try {
         console.log('Fetching expenses for id:', id);
-        const response = await axios.get(`http://localhost:5000/api/expenses`, {
+        const response = await api.get(`/expenses`, {
           params: { id },
         });
         const expenses = response.data;
@@ -237,7 +237,7 @@ const EditPeriodExpenses = () => {
       };
 
       console.log('Sending PUT /api/expenses/:id with payload:', payload);
-      await axios.put(`http://localhost:5000/api/expenses/${id}`, payload);
+      await api.put(`/expenses/${id}`, payload);
       setSuccessMessage('✅ Expenses updated successfully!'); // Set success message
       setTimeout(() => {
         setSuccessMessage(''); // Clear message after 2 seconds

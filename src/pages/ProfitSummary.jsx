@@ -122,7 +122,7 @@
 
 
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
 import '../styles/ProfitSummary.css';
@@ -152,7 +152,7 @@ const ProfitSummary = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/profit-summary', {
+      const response = await api.get('/profit-summary', {
         params: { startDate: dates.startDate, endDate: dates.endDate },
       });
       console.log('API Response:', response.data);

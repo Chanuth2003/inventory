@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import '../styles/PvcProduction.css';
 
 function PvcProduction() {
@@ -17,7 +17,7 @@ function PvcProduction() {
     const fetchRawMaterials = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:5000/api/pvc-rawmaterials');
+        const response = await api.get('/api/pvc-rawmaterials');
         console.log('Fetched PVC raw materials:', response.data);
         setRawMaterials(response.data);
       } catch (err) {
@@ -92,7 +92,7 @@ function PvcProduction() {
     };
 
     try {
-      await axios.post('http://localhost:5000/api/pvc-production', productionData);
+      await api.post('/api/pvc-production', productionData);
       setSuccess('PVC production saved successfully!');
       setCode('');
       setRows([{ raw_material_id: '', weight: 0, price: 0 }]);

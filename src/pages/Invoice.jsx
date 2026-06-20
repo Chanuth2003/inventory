@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import '../styles/Invoice.css';
 
 function Invoice() {
@@ -12,7 +12,7 @@ function Invoice() {
   useEffect(() => {
     const fetchInvoice = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/sales/${saleId}/invoice`);
+        const response = await api.get(`/sales/${saleId}/invoice`);
         setInvoiceData(response.data);
         setError(null);
       } catch (error) {

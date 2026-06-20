@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import '../styles/pvcproductioninventory.css';
 
 function PvcProductionInventory() {
@@ -14,7 +14,7 @@ function PvcProductionInventory() {
     const fetchProductions = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:5000/api/pvc-production');
+        const response = await api.get('/api/pvc-production');
         console.log('Fetched PVC production data:', response.data);
         if (!Array.isArray(response.data) || response.data.length === 0) {
           setError('No PVC production records found or invalid data format');
@@ -50,7 +50,7 @@ function PvcProductionInventory() {
     }
 
     try {
-      await axios.put(`http://localhost:5000/api/pvc-production/${id}`, {
+      await api.put(`/api/pvc-production/${id}`, {
         total_weight: parseFloat(updatedData.total_weight),
         total_price: parseFloat(updatedData.total_price),
       });
@@ -69,7 +69,7 @@ function PvcProductionInventory() {
   // Delete production record
   const deleteProduction = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/pvc-production/${id}`);
+      await api.delete(`/api/pvc-production/${id}`);
       setProductions(productions.filter(item => item.id !== id));
       setSuccess('PVC production deleted successfully!');
       setTimeout(() => setSuccess(null), 3000);

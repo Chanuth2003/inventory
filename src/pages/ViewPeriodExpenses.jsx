@@ -393,7 +393,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import '../styles/ViewPeriodExpenses.css';
 
@@ -408,7 +408,7 @@ const ViewPeriodExpenses = () => {
   useEffect(() => {
     const fetchDateRanges = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/expense-dates');
+        const response = await api.get('/expense-dates');
         console.log('Available Date Ranges:', response.data);
         setDateRanges(response.data);
         setError(null);
@@ -428,7 +428,7 @@ const ViewPeriodExpenses = () => {
   const fetchExpenses = async (id, startDate, endDate) => {
     console.log('Sending GET /api/expenses with:', { id, startDate, endDate });
     try {
-      const response = await axios.get('http://localhost:5000/api/expenses', {
+      const response = await api.get('/expenses', {
         params: { id },
       });
       const fetchedExpenses = response.data;
@@ -454,7 +454,7 @@ const ViewPeriodExpenses = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this expense record?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/expenses/${id}`);
+      await api.delete(`/expenses/${id}`);
       setSuccessMessage('✅ Expenses deleted successfully!');
       setExpenses(null);
       setSelectedRange(null);

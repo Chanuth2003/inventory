@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import '../styles/AddRawMaterialPvc.css'; // This will contain the provided CSS
 
 function AddRawMaterialPvc() {
@@ -16,7 +16,7 @@ function AddRawMaterialPvc() {
   useEffect(() => {
     const fetchExistingNames = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/pvc-rawmaterials');
+        const response = await api.get('/api/pvc-rawmaterials');
         setExistingNames(response.data.map(material => material.name.toLowerCase()));
       } catch (err) {
         console.error('Error fetching PVC raw materials:', err);
@@ -87,14 +87,14 @@ function AddRawMaterialPvc() {
 
     try {
       // First, insert into pvc_rawmaterials table
-      const rawMaterialResponse = await axios.post(
+      const rawMaterialResponse = await api.post(
         'http://localhost:5000/api/pvc-rawmaterials', 
         rawMaterialData
       );
       
       if (rawMaterialResponse.status === 201) {
         // Then, insert into pvc_raw_material_inventory table
-        const inventoryResponse = await axios.post(
+        const inventoryResponse = await api.post(
           'http://localhost:5000/api/pvc-raw-material-inventory', 
           inventoryData
         );

@@ -275,7 +275,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import '../styles/saledetails.css';
 
 const SaleDetails = () => {
@@ -292,7 +292,7 @@ const SaleDetails = () => {
   useEffect(() => {
     const fetchSaleDetails = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/sales/${id}`);
+        const res = await api.get(`/sales/${id}`);
         setSale(res.data);
       } catch (err) {
         console.error('Error fetching sale details:', err);
@@ -330,13 +330,13 @@ const SaleDetails = () => {
           return;
         }
 
-        const res = await axios.put(`http://localhost:5000/payments/${creditPayment.id}/pay-credit`, {
+        const res = await api.put(`/payments/${creditPayment.id}/pay-credit`, {
           amount_paid: parseFloat(paymentAmount)
         });
 
         if (res.status === 200) {
           // Refresh sale details
-          const updatedRes = await axios.get(`http://localhost:5000/sales/${id}`);
+          const updatedRes = await api.get(`/sales/${id}`);
           setSale(updatedRes.data);
           setPaymentAmount('');
           setError('');
@@ -355,11 +355,11 @@ const SaleDetails = () => {
           paymentData.cheque_date = chequeDate;
         }
 
-        const res = await axios.post(`http://localhost:5000/pay-sale`, paymentData);
+        const res = await api.post(`/pay-sale`, paymentData);
 
         if (res.status === 201) {
           // Refresh sale details
-          const updatedRes = await axios.get(`http://localhost:5000/sales/${id}`);
+          const updatedRes = await api.get(`/sales/${id}`);
           setSale(updatedRes.data);
           setPaymentAmount('');
           setPaymentMethod('credit');

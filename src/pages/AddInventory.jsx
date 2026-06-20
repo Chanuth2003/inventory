@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../utils/api';
 import '../styles/addinventory.css';
 
 export default function AddInventory() {
@@ -10,27 +11,32 @@ export default function AddInventory() {
     quantity: '',
     unit: 'meter'
   });
-  const [successMessage, setSuccessMessage] = useState(''); // Added state for success message
+  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState('');
 
-  // Fetch product list from backend
+  // Fetch product list
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('http://localhost:5000/products');
-        const data = await res.json();
-        setProducts(data);
+        const response = await api.get('/products');
+        setProducts(response.data || []);
       } catch (err) {
-        console.error('❌ Failed to fetch products:', err);
+        console.error('Failed to fetch products:', err);
+        setError('Failed to load products. Please login again.');
       }
     };
     fetchProducts();
   }, []);
 
-  // Auto-fill product_type and unit on product selection
+  // Auto-fill product type and unit when product is selected
   useEffect(() => {
     const selected = products.find(p => p.product_id === inventory.product_id);
     if (selected) {
-      setInventory(prev => ({ ...prev, product_type: selected.type, unit: selected.unit }));
+      setInventory(prev => ({
+        ...prev,
+        product_type: selected.type || '',
+        unit: selected.unit || 'meter'
+      }));
     }
   }, [inventory.product_id, products]);
 
@@ -39,32 +45,31 @@ export default function AddInventory() {
     setInventory(prev => ({ ...prev, [name]: value }));
   };
 
-  // Prevent scroll wheel from changing number input values
   const handleWheel = (e) => {
     e.preventDefault();
-    e.target.blur(); // Optional: blur to prevent further scroll interaction
+    e.target.blur();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
+    if (!inventory.product_id || !inventory.date || !inventory.quantity) {
+      setError('Please fill all required fields');
+      return;
+    }
 
     try {
-      const res = await fetch('http://localhost:5000/add-inventory', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          date: inventory.date,
-          product_id: inventory.product_id,
-          quantity: parseInt(inventory.quantity),
-          unit: inventory.unit
-        })
+      const response = await api.post('/add-inventory', {
+        date: inventory.date,
+        product_id: inventory.product_id,
+        quantity: parseInt(inventory.quantity),
+        unit: inventory.unit
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        setSuccessMessage('✅ Inventory successfully added to the database!'); // Updated success message
+      if (response.status === 201) {
+        setSuccessMessage('✅ Inventory successfully added!');
         setInventory({
           date: '',
           product_id: '',
@@ -72,14 +77,11 @@ export default function AddInventory() {
           quantity: '',
           unit: 'meter'
         });
-        // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(''), 3000);
-      } else {
-        alert('❌ Submission failed: ' + data.error);
       }
     } catch (err) {
-      console.error('❌ Error submitting inventory:', err);
-      alert('❌ Something went wrong while submitting.');
+      console.error('Error adding inventory:', err);
+      setError(err.response?.data?.error || 'Failed to add inventory');
     }
   };
 
@@ -88,16 +90,14 @@ export default function AddInventory() {
       <div className="add-inventory-container">
         <div className="add-inventory-card">
           <h2 className="add-inventory-title">Add Inventory</h2>
+
+          {error && <div className="error-message">{error}</div>}
           {successMessage && (
-            <div className="success-message" style={{
-              color: '#28a745',
-              textAlign: 'center',
-              marginBottom: '20px',
-              fontWeight: '600'
-            }}>
+            <div className="success-message" style={{ color: '#28a745', textAlign: 'center', marginBottom: '20px' }}>
               {successMessage}
             </div>
           )}
+
           <form onSubmit={handleSubmit} className="add-inventory-form">
             <div className="form-group">
               <label htmlFor="date">Date</label>
@@ -110,6 +110,7 @@ export default function AddInventory() {
                 required
               />
             </div>
+
             <div className="form-group">
               <label htmlFor="product_id">Product ID</label>
               <select
@@ -121,10 +122,13 @@ export default function AddInventory() {
               >
                 <option value="">Select a product</option>
                 {products.map(p => (
-                  <option key={p.product_id} value={p.product_id}>{p.product_id}</option>
+                  <option key={p.product_id} value={p.product_id}>
+                    {p.product_id} - {p.type}
+                  </option>
                 ))}
               </select>
             </div>
+
             <div className="form-group">
               <label htmlFor="product_type">Product Type</label>
               <input
@@ -135,6 +139,7 @@ export default function AddInventory() {
                 disabled
               />
             </div>
+
             <div className="form-group">
               <label htmlFor="unit">Unit</label>
               <input
@@ -145,6 +150,7 @@ export default function AddInventory() {
                 disabled
               />
             </div>
+
             <div className="form-group">
               <label htmlFor="quantity">Quantity</label>
               <input
@@ -159,6 +165,7 @@ export default function AddInventory() {
                 min="1"
               />
             </div>
+
             <button type="submit" className="submit-btn">
               Add Inventory
             </button>

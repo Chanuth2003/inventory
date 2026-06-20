@@ -166,7 +166,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';        // ← Import this
 import '../styles/RawMaterialsPvcInventory.css';
 
 function RawMaterialsPvcInventory() {
@@ -180,7 +180,7 @@ function RawMaterialsPvcInventory() {
     const fetchInventory = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:5000/api/pvc-raw-material-inventory-joined');
+        const response = await api.get('/api/pvc-raw-material-inventory-joined');
         console.log('Fetched PVC inventory data:', response.data);
         if (!Array.isArray(response.data) || response.data.length === 0) {
           setError('No PVC inventory records found or invalid data format');

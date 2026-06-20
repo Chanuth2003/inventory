@@ -272,7 +272,7 @@
 
 
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import '../styles/PeriodExpensesForm.css';
 
 const PeriodExpensesForm = () => {
@@ -421,7 +421,7 @@ const PeriodExpensesForm = () => {
         other_expenses: parseFloat(formData.otherExpenses) || null,
       };
 
-      const response = await axios.post('http://localhost:5000/api/period-expenses', payload);
+      const response = await api.post('/period-expenses', payload);
       setSuccessMessage('✅ Expenses saved successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
       setFormData({

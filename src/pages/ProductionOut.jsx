@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import '../styles/ProductionOut.css';
 
 function ProductionOut() {
@@ -15,7 +15,7 @@ function ProductionOut() {
   useEffect(() => {
     const fetchProductionCodes = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/production-codes');
+        const response = await api.get('/api/production-codes');
         setProductionCodes(response.data);
       } catch (err) {
         console.error('Error fetching production codes:', err);
@@ -54,7 +54,7 @@ function ProductionOut() {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/production-out', {
+      await api.post('/api/production-out', {
         date: formData.date,
         batchCode: formData.batchCode,
         quantity,

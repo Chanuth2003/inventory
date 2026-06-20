@@ -8,16 +8,17 @@ import process from 'process';
 import bcrypt from "bcrypt";
 import session from "express-session";
 import { ADMIN_PASSWORD_HASH } from "../config/auth.js";
+import authRoutes from './routes/auth.js';
 
 
 
 
 dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-
+app.use('/auth', authRoutes);
+app.use('/auth', authRoutes);
 
 // server.js (CORS)
 app.use(cors({
@@ -32,48 +33,59 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false
+    secure: false,
+    httpOnly: true,
+    maxAge: 60 * 60 * 1000 // 1 hour
   }
 }));
 
 
+// ====================== ROUTES ======================
+app.use('/api', authRoutes);           // ← Add this
+
+// Protect your inventory route
+import { isAuthenticated } from './middleware/auth.js';
+
+app.use('/inventory', isAuthenticated);
 
 
 
 
 
-app.post("/login", async (req, res) => {
+
+
+// ====================== LOGIN ROUTE ======================
+app.post("/api/login", async (req, res) => {
   try {
     const { password } = req.body;
 
     if (!password) {
-      return res.status(400).json({
-        success: false,
-        message: "Password required"
-      });
+      return res.status(400).json({ success: false, message: "Password required" });
     }
 
     const match = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
 
-    if (!match) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid password"
-      });
+    if (match) {
+      req.session.authenticated = true;
+      req.session.isAdmin = true;
+      console.log("✅ Login successful");
+      return res.json({ success: true, message: "Login successful" });
+    } else {
+      return res.status(401).json({ success: false, message: "Invalid password" });
     }
-
-    req.session.isAdmin = true;
-
-    res.json({
-      success: true
-    });
-
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error"
-    });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+// ====================== CHECK SESSION ======================
+app.get('/api/check-session', (req, res) => {
+  if (req.session && req.session.authenticated) {
+    res.json({ authenticated: true });
+  } else {
+    res.status(401).json({ authenticated: false });
   }
 });
 
@@ -1211,11 +1223,6 @@ app.get('/api/raw-material-inventory-joined', requireAuth, async (req, res) => {
       LEFT JOIN rawmaterials rm ON ri.raw_material_id = rm.raw_material_id
       ORDER BY ri.date DESC
     `);
-    console.log('Query result:', rows);
-    rows.forEach(row => console.log(`unit_price type: ${typeof row.unit_price}, value: ${row.unit_price}`));
-    if (rows.length === 0) {
-      console.log('No records found in raw_material_inventory');
-    }
     res.json(rows);
   } catch (err) {
     console.error('Error fetching inventory:', err.message);
@@ -2753,7 +2760,313 @@ app.post('/api/monthly-expenses', async (req, res) => {
 
 
 
+// ═══════════════════════════════════════════════════════════════════════
+//  PASTE THESE ROUTES INTO YOUR server.js
+//  Add them BEFORE the 404 handler at the bottom:
+//    app.use('*', (req, res) => { ... })
+//
+//  These routes are written to match YOUR exact schema:
+//    Tables  : sales, payments, customers, inventory, products,
+//              production, pvc_production
+//    Auth    : uses your existing requireAuth middleware
+// ═══════════════════════════════════════════════════════════════════════
 
+
+// ─────────────────────────────────────────────────────────────────────
+//  1.  GET /dashboard/inventory/summary
+//      Final product inventory (left panel)
+//      Uses: inventory + products  (same query as your existing
+//            /inventory/summary but exposed under a cleaner path so it
+//            doesn't clash with the one already in your file)
+// ─────────────────────────────────────────────────────────────────────
+app.get('/dashboard/inventory/summary', requireAuth, async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        i.product_id,
+        p.type        AS product_name,
+        p.unit,
+        COALESCE(SUM(i.quantity), 0) AS total_quantity
+      FROM inventory i
+      JOIN products p ON i.product_id = p.product_id
+      GROUP BY i.product_id, p.type, p.unit
+      ORDER BY p.type ASC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('GET /dashboard/inventory/summary:', err.message);
+    res.status(500).json({ error: 'Failed to fetch inventory summary' });
+  }
+});
+
+
+// ─────────────────────────────────────────────────────────────────────
+//  2.  GET /dashboard/production/summary?type=normal|pvc
+//      Production inventory — Normal (production table)
+//                           — PVC   (pvc_production table)
+//      Uses: production  OR  pvc_production
+// ─────────────────────────────────────────────────────────────────────
+app.get('/dashboard/production/summary', requireAuth, async (req, res) => {
+  const { type } = req.query;
+
+  try {
+    if (type === 'pvc') {
+      // pvc_production table: id, code, total_weight, total_price
+      const [rows] = await db.query(`
+        SELECT
+          id          AS product_id,
+          code        AS product_name,
+          'Kg'        AS unit,
+          COALESCE(SUM(total_weight), 0) AS total_quantity
+        FROM pvc_production
+        GROUP BY id, code
+        ORDER BY code ASC
+      `);
+      return res.json(rows);
+    }
+
+    // default: normal rubber production table: id, code, total_weight, total_price
+    const [rows] = await db.query(`
+      SELECT
+        id          AS product_id,
+        code        AS product_name,
+        'Kg'        AS unit,
+        COALESCE(SUM(total_weight), 0) AS total_quantity
+      FROM production
+      GROUP BY id, code
+      ORDER BY code ASC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('GET /dashboard/production/summary:', err.message);
+    res.status(500).json({ error: 'Failed to fetch production summary' });
+  }
+});
+
+
+// ─────────────────────────────────────────────────────────────────────
+//  3.  GET /dashboard/sales?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+//      All bills for the date range with payment breakdown
+//      Uses: sales + customers + payments
+//
+//      Returns per bill:
+//        bill_no, date, customer_name, method (Cash / Cheque / Credit),
+//        total_amount, status (Complete | Pending),
+//        cheque_number, cheque_date, cheque_status  ← for cheque panel
+// ─────────────────────────────────────────────────────────────────────
+app.get('/dashboard/sales', requireAuth, async (req, res) => {
+  const { startDate, endDate } = req.query;
+  if (!startDate || !endDate)
+    return res.status(400).json({ error: 'startDate and endDate are required' });
+
+  const start = new Date(startDate).toISOString().split('T')[0];
+  const end   = new Date(endDate).toISOString().split('T')[0];
+
+  try {
+    // Fetch all sales in range with their payments
+    const [rows] = await db.query(`
+      SELECT
+        s.id                                          AS sale_id,
+        s.bill_no,
+        DATE_FORMAT(s.date, '%Y-%m-%d')               AS date,
+        s.total_amount,
+        c.name                                        AS customer_name,
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id',             p.id,
+            'method',         p.method,
+            'amount',         p.amount,
+            'cheque_number',  p.cheque_number,
+            'bank_name',      p.bank_name,
+            'cheque_date',    DATE_FORMAT(p.cheque_date, '%Y-%m-%d'),
+            'cheque_status',  p.cheque_status
+          )
+        ) AS payments
+      FROM sales s
+      JOIN customers c ON s.customer_id = c.id
+      LEFT JOIN payments p ON p.sale_id = s.id
+      WHERE s.date BETWEEN ? AND ?
+      GROUP BY s.id, s.bill_no, s.date, s.total_amount, c.name
+      ORDER BY s.date DESC, s.id DESC
+    `, [start, end]);
+
+    const result = rows.map(sale => {
+      // Parse payments JSON safely
+      let payments = [];
+      try {
+        payments = (typeof sale.payments === 'string'
+          ? JSON.parse(sale.payments)
+          : sale.payments || []
+        ).filter(p => p && p.method);
+      } catch { payments = []; }
+
+      // Totals
+      const totalPaid = payments
+        .filter(p => p.method === 'cash' || (p.method === 'cheque' && p.cheque_status === 'processed'))
+        .reduce((s, p) => s + (Number(p.amount) || 0), 0);
+
+      const remainingCredit = Number(sale.total_amount) - totalPaid;
+
+      // Payment method label (Cash, Cheque, Credit or combinations)
+      const uniqueMethods = [...new Set(
+        payments.map(p => (p.method || '').trim().toLowerCase()).filter(Boolean)
+      )].map(m => m.charAt(0).toUpperCase() + m.slice(1));
+      const method = uniqueMethods.length > 0 ? uniqueMethods.join(', ') : 'Credit';
+
+      // Status
+      const chequePayments = payments.filter(p => p.method === 'cheque');
+      const chequeProcessed = chequePayments.some(p => p.cheque_status === 'processed');
+      const chequeReturned  = chequePayments.some(p => p.cheque_status === 'returned');
+
+      let status = 'Pending';
+      if (remainingCredit <= 0) {
+        status = 'Complete';
+      } else if (chequePayments.length > 0) {
+        status = (chequeReturned || chequePayments.some(p => p.cheque_status === 'pending'))
+          ? 'Pending' : chequeProcessed ? 'Complete' : 'Pending';
+      } else if (uniqueMethods.includes('Cash')) {
+        status = totalPaid >= Number(sale.total_amount) ? 'Complete' : 'Pending';
+      }
+
+      return {
+        sale_id:    sale.sale_id,
+        bill_no:    sale.bill_no,
+        date:       sale.date,
+        customer_name: sale.customer_name,
+        total_amount:  Number(sale.total_amount),
+        method,
+        status,
+        payments,       // full array — frontend uses this for cheque panel
+        total_paid:     totalPaid,
+        remaining_credit: remainingCredit,
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('GET /dashboard/sales:', err.message);
+    res.status(500).json({ error: 'Failed to fetch dashboard sales' });
+  }
+});
+
+
+// ─────────────────────────────────────────────────────────────────────
+//  4.  GET /dashboard/sales/due?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+//      Bills that still have outstanding credit OR pending/returned cheques
+//      Uses: sales + customers + payments
+// ─────────────────────────────────────────────────────────────────────
+app.get('/dashboard/sales/due', requireAuth, async (req, res) => {
+  const { startDate, endDate } = req.query;
+  if (!startDate || !endDate)
+    return res.status(400).json({ error: 'startDate and endDate are required' });
+
+  const start = new Date(startDate).toISOString().split('T')[0];
+  const end   = new Date(endDate).toISOString().split('T')[0];
+
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        s.id                                        AS sale_id,
+        s.bill_no,
+        DATE_FORMAT(s.date, '%Y-%m-%d')             AS date,
+        s.total_amount,
+        c.name                                      AS customer_name,
+        -- Total paid (cash + processed cheques only)
+        COALESCE((
+          SELECT SUM(p2.amount)
+          FROM payments p2
+          WHERE p2.sale_id = s.id
+            AND (
+              p2.method = 'cash'
+              OR (p2.method = 'cheque' AND p2.cheque_status = 'processed')
+            )
+        ), 0)                                       AS total_paid,
+        -- Primary payment method on this sale
+        (
+          SELECT GROUP_CONCAT(DISTINCT CONCAT(UPPER(LEFT(p3.method,1)), SUBSTRING(p3.method,2)) SEPARATOR ', ')
+          FROM payments p3
+          WHERE p3.sale_id = s.id AND p3.method IS NOT NULL
+        )                                           AS method
+      FROM sales s
+      JOIN customers c ON s.customer_id = c.id
+      WHERE s.date BETWEEN ? AND ?
+        AND (
+          -- Still has an unpaid credit balance
+          s.total_amount > COALESCE((
+            SELECT SUM(p4.amount)
+            FROM payments p4
+            WHERE p4.sale_id = s.id
+              AND (
+                p4.method = 'cash'
+                OR (p4.method = 'cheque' AND p4.cheque_status = 'processed')
+              )
+          ), 0)
+          OR
+          -- Has a pending or returned cheque
+          EXISTS (
+            SELECT 1 FROM payments p5
+            WHERE p5.sale_id = s.id
+              AND p5.method = 'cheque'
+              AND p5.cheque_status IN ('pending', 'returned')
+          )
+        )
+      ORDER BY s.date ASC, s.id ASC
+    `, [start, end]);
+
+    const result = rows.map(r => ({
+      sale_id:       r.sale_id,
+      bill_no:       r.bill_no,
+      date:          r.date,
+      customer_name: r.customer_name,
+      total_amount:  Number(r.total_amount),
+      total_paid:    Number(r.total_paid),
+      due_amount:    Number(r.total_amount) - Number(r.total_paid),
+      method:        r.method || 'Credit',
+      status:        'Pending',
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error('GET /dashboard/sales/due:', err.message);
+    res.status(500).json({ error: 'Failed to fetch due bills' });
+  }
+});
+
+
+// ─────────────────────────────────────────────────────────────────────
+//  5.  GET /dashboard/totals?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+//      Cash / Credit / Cheque totals for the right-panel summary cards
+//      Uses: payments + sales (to filter by sale date)
+// ─────────────────────────────────────────────────────────────────────
+app.get('/dashboard/totals', requireAuth, async (req, res) => {
+  const { startDate, endDate } = req.query;
+  if (!startDate || !endDate)
+    return res.status(400).json({ error: 'startDate and endDate are required' });
+
+  const start = new Date(startDate).toISOString().split('T')[0];
+  const end   = new Date(endDate).toISOString().split('T')[0];
+
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        p.method,
+        COALESCE(SUM(p.amount), 0) AS total
+      FROM payments p
+      JOIN sales s ON p.sale_id = s.id
+      WHERE s.date BETWEEN ? AND ?
+        AND p.method IN ('cash', 'credit', 'cheque')
+      GROUP BY p.method
+    `, [start, end]);
+
+    const totals = { cash: 0, credit: 0, cheque: 0 };
+    rows.forEach(r => { totals[r.method] = Number(r.total); });
+
+    res.json(totals);
+  } catch (err) {
+    console.error('GET /dashboard/totals:', err.message);
+    res.status(500).json({ error: 'Failed to fetch totals' });
+  }
+});
 
 
 

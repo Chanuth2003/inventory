@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import '../styles/PvcProductionOut.css';
 
 function PvcProductionOut() {
@@ -17,7 +17,7 @@ function PvcProductionOut() {
     const fetchProductionCodes = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:5000/api/pvc-production-codes');
+        const response = await api.get('/api/pvc-production-codes');
         console.log('Fetched PVC production codes:', response.data);
         setProductionCodes(response.data);
       } catch (err) {
@@ -59,7 +59,7 @@ function PvcProductionOut() {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/pvc-production-out', {
+      await api.post('/api/pvc-production-out', {
         date: formData.date,
         batchCode: formData.batchCode,
         quantity,

@@ -149,7 +149,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';        // ← Import this
 import '../styles/RawMaterialsInventory.css';
 
 function RawMaterialsInventory() {
@@ -160,31 +160,40 @@ function RawMaterialsInventory() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchInventory = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get('http://localhost:5000/api/raw-material-inventory-joined');
-        console.log('Fetched inventory data:', response.data);
-        if (!Array.isArray(response.data) || response.data.length === 0) {
-          setError('No inventory records found or invalid data format');
-        } else {
-          // Ensure unit_price is a number
-          const parsedInventory = response.data.map(item => ({
-            ...item,
-            unit_price: typeof item.unit_price === 'number' ? item.unit_price : parseFloat(item.unit_price) || 0,
-          }));
-          setInventory(parsedInventory);
-        }
-      } catch (err) {
-        console.error('Error fetching inventory:', err.response?.data || err.message);
-        setError(`Failed to fetch inventory: ${err.response?.data?.error || err.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchInventory = async () => {
+    setLoading(true);
+    setError(null);
 
-    fetchInventory();
-  }, []);
+    try {
+      const response = await api.get('/api/raw-material-inventory-joined');
+
+      console.log('Fetched inventory data:', response.data);
+
+      if (Array.isArray(response.data)) {
+        const parsedInventory = response.data.map(item => ({
+          ...item,
+          unit_price: typeof item.unit_price === 'number' 
+            ? item.unit_price 
+            : parseFloat(item.unit_price) || 0,
+        }));
+        setInventory(parsedInventory);
+      } else {
+        setError('Invalid data format');
+      }
+    } catch (err) {
+      console.error('Fetch error:', err);
+      if (err.response?.status === 401) {
+        setError('Session expired. Please login again.');
+      } else {
+        setError(`Failed to fetch inventory: ${err.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchInventory();
+}, []);
 
   const toggleEditMode = (id) => {
     setEditMode(prev => ({ ...prev, [id]: !prev[id] }));

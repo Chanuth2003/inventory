@@ -1,46 +1,40 @@
-
-
-
-
-
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import '../styles/Production.css'; // Assume a CSS file for styling
+import api from '../utils/api';
+import '../styles/Production.css';
 
 function Production() {
   const [code, setCode] = useState('');
-  const [rawMaterials, setRawMaterials] = useState([]); // List of raw materials from backend
-  const [rows, setRows] = useState([{ raw_material_id: '', weight: 0, price: 0 }]); // Start with 1 row
+  const [rawMaterials, setRawMaterials] = useState([]);
+  const [rows, setRows] = useState([{ raw_material_id: '', weight: 0, price: 0 }]);
   const [totalWeight, setTotalWeight] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch raw materials from backend
+  // Fetch raw materials
   useEffect(() => {
     const fetchRawMaterials = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/raw-materials');
-        setRawMaterials(response.data);
+        const response = await api.get('/api/raw-materials');
+        setRawMaterials(response.data || []);
       } catch (err) {
         console.error('Error fetching raw materials:', err);
-        setError('Failed to fetch raw materials');
+        setError('Failed to load raw materials. Please login again.');
       }
     };
 
     fetchRawMaterials();
   }, []);
 
-  // Update row and recalculate totals
   const updateRow = (index, field, value) => {
     const updatedRows = [...rows];
     updatedRows[index] = { ...updatedRows[index], [field]: value };
 
-    // Calculate price if raw_material_id and weight are set
     if (field === 'raw_material_id' || field === 'weight') {
-      const selectedMaterial = rawMaterials.find(m => m.raw_material_id === updatedRows[index].raw_material_id);
-      if (selectedMaterial && updatedRows[index].weight > 0) {
-        updatedRows[index].price = updatedRows[index].weight * selectedMaterial.unit_price;
+      const selected = rawMaterials.find(m => m.raw_material_id === updatedRows[index].raw_material_id);
+      if (selected && updatedRows[index].weight > 0) {
+        updatedRows[index].price = (updatedRows[index].weight * selected.unit_price) || 0;
       } else {
         updatedRows[index].price = 0;
       }
@@ -48,14 +42,13 @@ function Production() {
 
     setRows(updatedRows);
 
-    // Recalculate totals
     const newTotalWeight = updatedRows.reduce((sum, row) => sum + (parseFloat(row.weight) || 0), 0);
-    const newTotalPrice = updatedRows.reduce((sum, row) => sum + row.price, 0);
+    const newTotalPrice = updatedRows.reduce((sum, row) => sum + (row.price || 0), 0);
+
     setTotalWeight(newTotalWeight);
     setTotalPrice(newTotalPrice);
   };
 
-  // Add a new row
   const addRow = () => {
     setRows([...rows, { raw_material_id: '', weight: 0, price: 0 }]);
   };
@@ -64,12 +57,13 @@ function Production() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    setLoading(true);
 
-    // Filter out rows with no raw material or zero weight
     const usedMaterials = rows.filter(row => row.raw_material_id && row.weight > 0);
 
     if (usedMaterials.length === 0) {
-      setError('Please select at least one raw material with a weight greater than 0.');
+      setError('Please add at least one raw material with weight > 0');
+      setLoading(false);
       return;
     }
 
@@ -79,40 +73,47 @@ function Production() {
       total_price: totalPrice,
       raw_materials: usedMaterials.map(row => ({
         raw_material_id: row.raw_material_id,
-        weight: row.weight,
-        price: row.price,
+        weight: parseFloat(row.weight),
+        price: parseFloat(row.price),
       })),
     };
 
     try {
-      await axios.post('http://localhost:5000/api/production', productionData);
-      setSuccess('Production saved and inventory updated successfully!');
+      await api.post('/api/production', productionData);
+      setSuccess('Production saved successfully!');
+      
+      // Reset form
       setCode('');
-      setRows([{ raw_material_id: '', weight: 0, price: 0 }]); // Reset to 1 row after success
+      setRows([{ raw_material_id: '', weight: 0, price: 0 }]);
       setTotalWeight(0);
       setTotalPrice(0);
     } catch (err) {
-      console.error('Error saving production:', err);
-      setError(err.response?.data?.error || 'Failed to save production and update inventory.');
+      console.error(err);
+      setError(err.response?.data?.error || 'Failed to save production');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="production-container">
-      <h2>Production</h2>
+      <h2>Production Entry</h2>
+
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">{success}</div>}
+
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="code">Code (e.g., A-150):</label>
+          <label>Production Code (e.g., A-150)</label>
           <input
             type="text"
-            id="code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             required
+            placeholder="Enter production code"
           />
         </div>
+
         <table className="raw-materials-table">
           <thead>
             <tr>
@@ -146,23 +147,24 @@ function Production() {
                     step="0.01"
                   />
                 </td>
-                <td>{row.price.toFixed(2)}</td>
+                <td>{row.price ? row.price.toFixed(2) : '0.00'}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        <button
-          type="button"
-          className="add-row-button"
-          onClick={addRow}
-        >
-          Add Row
+
+        <button type="button" className="add-row-button" onClick={addRow}>
+          + Add Row
         </button>
+
         <div className="totals">
-          <p>Total Weight: {totalWeight.toFixed(2)} kg</p>
-          <p>Total Price: Rs. {totalPrice.toFixed(2)}</p>
+          <p><strong>Total Weight:</strong> {totalWeight.toFixed(2)} kg</p>
+          <p><strong>Total Price:</strong> Rs. {totalPrice.toFixed(2)}</p>
         </div>
-        <button type="submit" className="submit-button">Save Production</button>
+
+        <button type="submit" className="submit-button" disabled={loading}>
+          {loading ? 'Saving...' : 'Save Production'}
+        </button>
       </form>
     </div>
   );
